@@ -36,25 +36,25 @@ class TaskController extends Controller
     }
     public function toggleComplete(){
         $task=Task::find(request('task_id'));
-        if(auth()->id()==$task->user_id)
-        {
-        $task->completed=!$task->completed;
-        $task->save();
-        return response()->json(['result' => $task]);}
-        else {
+
+        if (\Gate::denies('taskOwner', $task)) {
             return response()->json("Task doesn't Belong To you");
         }
+
+        $task->completed=!$task->completed;
+        $task->save();
+        return response()->json(['result' => $task]);
+
     }
     public function togglePrivate(){
         $task=Task::find(request('task_id'));
-        if(auth()->id()==$task->user_id)
-        {
-        $task->private=!$task->private;
-        $task->save();
-        return response()->json(['result' => $task]);}
-        else {
+        if(\Gate::denies('taskOwner', $task)){
             return response()->json("Task doesn't Belong To you");
         }
+        $task->private=!$task->private;
+        $task->save();
+        return response()->json(['result' => $task]);
+
     }
     public function updateTask(){
         $this->validate(request(),[
@@ -62,29 +62,27 @@ class TaskController extends Controller
             'body'=>'required'
         ]);
         $task=Task::find(request('task_id'));
-        if(auth()->id()==$task->user_id)
-        {
-        $task->body=request('body');
-        $task->save();
-        return response()->json(['result' => $task]);}
-        else {
+        if(\Gate::denies('taskOwner', $task)){
             return response()->json("Task doesn't Belong To you");
         }
+        $task->body=request('body');
+        $task->save();
+        return response()->json(['result' => $task]);
+
     }
     public function updateDeadline(){
         $this->validate(request(),[
             'task_id'=>'required',
             'deadline'=>'required'
         ]);
-        $task=Task::find(request('task_id'));
-        if(auth()->id()==$task->user_id)
-        {   $task->deadline=request('deadline');
-            $task->save();
-            return response()->json(['result' => $task]);
-        }
-        else {
+        $task = Task::find(request('task_id'));
+        if(\Gate::denies('taskOwner', $task)){
             return response()->json("Task doesn't Belong To you");
         }
+         $task->deadline=request('deadline');
+            $task->save();
+            return response()->json(['result' => $task]);
+
     }
     public function showTasksGuest(){
         $tasks =Task::where('private',0)->get();
