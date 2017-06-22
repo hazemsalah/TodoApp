@@ -8,7 +8,8 @@ use App\Task;
 
 class TaskController extends Controller
 {
-    public function store(){
+    public function store()
+    {
 
         $this->validate(request(), [
 
@@ -21,96 +22,90 @@ class TaskController extends Controller
                 'user_id'=>auth()->id(),
                 'deadline' => request('deadline')
                 ]);
-        return ("Task added");
-
-
+        return response()->json("Task added");
     }
 
 
-    public function toggleCompleted(Request $request){
-        $this->validate(request(),[
-           'completed' => 'required'
+    public function toggleCompleted()
+    {
+        $this->validate(request(), [
+           'id' => 'required'
         ]);
 
-        $task = Task::find($request->input('id'));
-        if(auth()->id() == $task->user_id) {
+        $task = Task::find(request()->input('id'));
+        if (\Gate::allows('taskOwner', $task)) {
             $task->completed = !$task->completed;
             $task->save();
-            return ("YAY completed EDITED");
+            return response()->json("YAY completed EDITED");
         }
-        else{
-
-            return ("Task Not yours");
-        }
-
+            return response()->json("Task Not yours");
     }
 
 
-    public function togglePrivate(Request $request){
+    public function togglePrivate()
+    {
         $this->validate(request(), [
             'private' => 'required'
         ]);
 
-        $task = Task::find($request->input('id'));
-        if(auth()->id() == $task->user_id) {
+        $task = Task::find(request()->input('id'));
+        if (\Gate::allows('taskOwner', $task)) {
              $task->private = ! $task->private;
              $task->save();
-             return ("YAY private EDITED");
+             return response()->json("YAY private EDITED");
+        } else {
+            return response()->json("Task Not yours");
         }
-        else{
-            return ("Task Not yours");
-        }
-
     }
 
-    public function updateBody(){
+    public function updateBody()
+    {
 
         $this->validate(request(), [
             'body' => 'required'
         ]);
         $task = Task::find(request('id'));
-        if(auth()->id() == $task->user_id) {
+        if (\Gate::allows('taskOwner', $task)) {
             $task->body = request('body');
             $task->save();
-            return("body is updated");
-        }
-        else{
-            return ("This task is not yours");
+            return response()->json("body is updated");
+        } else {
+            return response()->json("This task is not yours");
         }
     }
 
-    public function updateDeadline(){
+    public function updateDeadline()
+    {
 
         $this->validate(request(), [
             'deadline' => 'required'
         ]);
         $task = Task::find(request('id'));
-        if(auth()->id() == $task->user_id) {
+        if (\Gate::allows('taskOwner', $task)) {
             $task->deadline = request('deadline');
             $task->save();
-            return("deadline is updated");
-        }
-        else{
-            return ("This task is not yours");
+            return response()->json("deadline is updated");
+        } else {
+            return response()->json("This task is not yours");
         }
     }
 
 
-    public function deleteTask(){
+    public function deleteTask()
+    {
 
         $task = Task::find(request('id'));
-        if(auth()->id() == $task->user_id) {
+        if (\Gate::allows('taskOwner', $task)) {
             $task->delete();
-            return ("YAY task is deleted");
+            return response()->json("YAY task is deleted");
+        } else {
+            return response()->json("This task doesnt belong to you");
         }
-        else{
-            return ("This task doesnt belong to you");
-        }
-
     }
 
-    public function tasksUser(){
-        $publis_tasks = Task::where('private', 0 )->get();
+    public function tasksUser()
+    {
+        $public_tasks = Task::where('private', 0)->get();
         $my_private_tasks = Task::where([
             ['private', 1],
             ['user_id', auth()->id()],
@@ -120,7 +115,8 @@ class TaskController extends Controller
         return response()->json($result);
     }
 
-    public function tasksGuest(){
+    public function tasksGuest()
+    {
         $public_tasks = Task::where("private", 0)->get();
         return response()->json($public_tasks);
     }
