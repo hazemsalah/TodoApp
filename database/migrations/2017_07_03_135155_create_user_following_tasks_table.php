@@ -5,9 +5,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 /**
- * Class CreateTasksTable
+ * Class CreateUserFollowingTasksTable
  */
-class CreateTasksTable extends Migration
+class CreateUserFollowingTasksTable extends Migration
 {
     /**
      * Run the migrations.
@@ -16,19 +16,10 @@ class CreateTasksTable extends Migration
      */
     public function up()
     {
-        Schema::create('tasks', function (Blueprint $table) {
+        Schema::create('user_following_tasks', function (Blueprint $table) {
             $table->increments('id');
-
-            $table->text('body');
-
             $table->integer('user_id');
-
-            $table->DateTime('deadline')->default(timestamps());
-
-            $table->boolean('private')->default(false);
-
-            $table->boolean('completed')->default(false);
-
+            $table->integer('task_id');
             $table->timestamps();
         });
     }
@@ -40,6 +31,6 @@ class CreateTasksTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists('user_following_tasks');
     }
 }
