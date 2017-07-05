@@ -2,31 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TaskInvitation;
 use Illuminate\Http\Request;
-
 use App\Http\Requests;
-
 use App\Http\Controllers\Controller;
-
 use JWTAuth;
-
 use App\User;
-
+use App\Mail\Welcome;
+use App\Task;
 use JWTAuthException;
 
 class UserController extends Controller
 {
+    /**
+     *$var user
+     */
     private $user;
 
-    public function __construct(){
+    /**
+     * UserController constructor.
+     */
+    public function __construct()
+    {
 
         $this->middleware('jwt.auth')->except(['login','register']);
 
     }
 
-    public function register(Request $request){
-
-      $this->validate(request(),[
+    /**
+     * @param Request $request
+     * new user registers to the system
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function register(Request $request)
+    {
+        $this->validate(request(), [
             'name' => 'required',
             'email'=> 'required|email',
             'password' => 'required|confirmed'
@@ -41,12 +51,19 @@ class UserController extends Controller
           'password' => bcrypt($request->get('password'))
 
         ]);
-         return redirect('/');
 
-        return response()->json(['status'=>true,'message'=>'User created successfully','data'=>$user]);
+          \Mail::to($user)->send(new Welcome);
+
+        return response()->json(['User created successfully']);
     }
 
-    public function login(Request $request){
+    /**
+     * @param Request $request
+     * user logs in to the system
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function login(Request $request)
+    {
 
         $credentials = $request->only('email', 'password');
 
@@ -54,13 +71,12 @@ class UserController extends Controller
 
         try {
 
-           if (!$token = JWTAuth::attempt($credentials)) {
+            if (!$token = JWTAuth::attempt($credentials)) {
 
-            return response()->json(['invalid_email_or_password'], 422);
+                return response()->json(['invalid_email_or_password'], 422);
 
-           }
-        }
-        catch (JWTAuthException $e) {
+            }
+        } catch (JWTAuthException $e) {
 
             return response()->json(['failed_to_create_token'], 500);
         }
@@ -68,38 +84,90 @@ class UserController extends Controller
 
           return response()->json(compact('token'));
 
-           //return redirect('/tasks');
     }
 
-    public function getAuthUser(Request $request){
+    /**
+     * get the authenticated user
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAuthUser()
+    {
 
         $user = \Auth::user();
 
         return response()->json(['result' => $user]);
     }
 
-    public function destroy(){
+    /**
+     * user logs out from the system
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function destroy()
+    {
 
        JWTAuth::invalidate(JWTAuth::getToken());
 
-       session()->flash('message','You are logged out :( ');
+        session()->flash('message', 'You are logged out :( ');
 
         return redirect('/');
     }
-    public function updatePassword(){
+
+    /**
+     * Updates the password of the authenticated user.
+     *
+     * @return string
+     */
+    public function updatePassword()
+    {
 
            $user = User::find(auth()->id());
-         $user->password = bcrypt(request('password'));
-                $user->save();
+           $user->password = bcrypt(request('password'));
+           $user->save();
 
               return('Your password has changed successfully ');
-        //session()->flash('message','Your password has changed successfully ');
     }
 
-    public function search(){
+    /**
+     * searches for another user by name
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function search()
+    {
 
-        $requestedUser = request('userEmail');
+        $this->validate(request(), [
+            'name' => 'required'
+        ]);
 
+        $requestedUser = request('name');
+
+        $users = User::where('name', $requestedUser)->orWhere('name', 'like', '%' . request('name') . '%')->get();
+
+        return response()->json($users);
+
+    }
+
+    /**
+     *invite another user to follow my private tasks
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function invite()
+    {
+        $this->validate(request(), [
+            'task_id' => 'required',
+            'user_id' => 'required'
+        ]);
+
+        $task= Task::find(request('task_id'));
+        $invitedUser = User::find(request('user_id'));
+
+        if (\Gate::denies('taskOwner', $task)) {
+            return response()->json("This Task doesn't belong to you");
+        }
+        \Mail::to($invitedUser)->send(new TaskInvitation($invitedUser, $task));
+
+        return response()->json("Your Email has been sent");
     }
 
 }
