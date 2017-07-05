@@ -2,64 +2,80 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\UpdateTask;
 use Illuminate\Http\Request;
-
+use App\Notifications\reminder;
+use App\User;
 use App\Task;
+use App\UserFollowingTasks;
 
+/**
+ * Class TaskController
+ * @package App\Http\Controllers
+ */
 class TaskController extends Controller
 {
 
-  public function __construct(){
+    /**
+     * TaskController constructor.
+     */
+    public function __construct()
+    {
 
-  $this->middleware('auth')->except(['index']);
+    }
+
+    /**
+     * return all the tasks that a user follows, public tasks and his tasks
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function taskUser()
+    {
+         $publicTasks = Task::where('private', 0)->get();
+
+         $userTasks = Task::where('user_id', auth()->id())->get();
+
+         $followedTasks = UserFollowingTasks::where('user_id', auth()->id())->get();
+
+         $allTasks = $publicTasks->merge($userTasks);
+
+         $result = $allTasks->merge($followedTasks);
+
+         return response()->json($result);
 
 }
 
-// public function show(Task $task){
-//
-//
-//       return $task;
-//       //return view('task.show',compact('task'));
-//   }
+    /**
+     * return all the public tasks to the guest
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function taskGuest()
+    {
 
-  public function taskUser(){
+        $tasks = Task::where('private', 0)->get();
 
-     $publicTasks = Task::where('private',0)->get();
 
-     $userTasks = Task::where('user_id',auth()->id())->get();
+        return response()->json($tasks);
 
-     $allTasks = $publicTasks->merge($userTasks);
+    }
 
-     return response()->json($allTasks);
-
-}
-
-  public function taskGuest()
+    /**
+     * @request('body')
+     * @request('deadline')
+     * create a new task
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function store()
 {
-    //$tasks = Task::all();
 
-    $tasks = Task::where('private',0)->get();
+        $this->validate(request(), [
 
-    //return $tasks;
+        'body' => 'required',
 
-    return view('task.index',compact('tasks'));
-}
-public function create(){
+            'deadline' => ' required'
 
-    return view('task.addTask');
-}
+        ]);
 
-   public function store(){
-
-      $this->validate(request(),[
-
-      'body' => 'required',
-
-      'deadline' => ' required'
-
- ]);
-
-      $task = Task::create([
+        $task = Task::create([
 
          'body' => request('body'),
 
@@ -68,19 +84,23 @@ public function create(){
          'deadline' => request('deadline')
 
 
- ]);
+          ]);
 
- session()->flash('message','Your Task has now been created :)');
+           $task = $task->fresh();
 
+           \Notification::send($task->user,  new reminder($task));
 
+           return response()->json(['result' => $task]);
 
-   return redirect('/');
+    }
 
-
-   }
-
-   public function update()
-   {
+    /**
+     * @request('task_id')
+     * update a specific task with all the requested fields
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update()
+    {
 
           $this->validate(request(), [
 
@@ -88,51 +108,75 @@ public function create(){
 
             ]);
 
-       $id = request('id');
+           $id = request('id');
 
-       $task = Task::findOrFail($id);
+           $task = Task::findOrFail($id);
 
 
-      if(auth()->id() == $task->user_id)
-     {
+          if (\Gate::denies('taskOwner', $task)) {
+              return response()->json("This Task doesn't belong to you");
+          }
 
-       $input = request()->all();
+            $input = request()->all();
 
-       $task->fill($input)->save();
+            $task->fill($input)->save();
 
-       session()->flash('message', 'Task successfully updated :)');
+            $userId=$task->user_id;
 
-       return redirect('/');
-     }
-     else{
+            $user = User::find($userId);
 
-       return('You cannot update this task');
-     }
-   }
 
-   public function destroy()
- {
+          \Notification::send($task->user, new UpdateTask($task, $user));
 
-     $id = request('id');
-
-     $task = Task::findOrFail($id);
-
-      if(auth()->id() == $task->user_id)
-     {
-
-     $task->delete();
-
-      session()->flash('message','Task successfully deleted!');
-
-     return redirect('/');
+            return response()->json("Task successfully updated :)");
     }
 
-    else{
 
-         return('You cannot delete this task');
-        //session()->flash('message','You cannot delete this task');
+    /**
+     * @request('task_id')
+     * delete a specific task
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroy()
+    {
+
+        $id = request('id');
+
+        $task = Task::findOrFail($id);
+
+        if (\Gate::denies('taskOwner', $task)) {
+               return response()->json("You cannot delete this task");
+        }
+
+        $task->delete();
+
+        return response()->json('Task successfully deleted!');
+    }
+
+    /**
+     * return the completed tasks
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getCompleted()
+    {
+
+        $completedTasks = Task::where([['completed', 1],['user_id',auth()->id()]])->get();
+
+        return response()->json($completedTasks);
 
     }
- }
+
+    /**
+     * return the uncompleted Tasks
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getNotCompleted()
+    {
+
+        $notCompletedTasks = Task::where([['completed', 0],['user_id',auth()->id()]])->get();
+
+        return response()->json($notCompletedTasks);
+
+    }
 
 }
