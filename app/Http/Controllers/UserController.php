@@ -1,22 +1,41 @@
 <?php
 namespace App\Http\Controllers;
+
+use App\Mail\TaskInvitation;
 use Illuminate\Http\Request;
 use App\Http\Requests;
-use App\Http\Controllers\Controller;
 use JWTAuth;
 use App\User;
+use App\Task;
 use JWTAuthException;
+use App\Mail\RegistrationMail;
+
 class UserController extends Controller
 {
+    /**
+     * @var User
+     */
     private $user;
-    public function __construct(User $user){
+
+    /**
+     * UserController constructor.
+     * @param User $user
+     */
+    public function __construct(User $user)
+    {
         $this->user = $user;
-        $this->middleware('jwt.auth')->except(['login', 'register', 'tasksGuest']);
     }
 
-    //
-    public function register(Request $request){
-        $this->validate(request(),[
+    /**
+     * Registering a user.
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function register(Request $request)
+    {
+        $this->validate(request(), [
             'name' => 'required',
             'email'=> 'required|email',
             'password' => 'required|confirmed'
@@ -26,12 +45,20 @@ class UserController extends Controller
             'email' => $request->get('email'),
             'password' => bcrypt($request->get('password'))
         ]);
-//        return redirect('/');
-
+        \Mail::to($user)->send(new RegistrationMail);
         return response()->json(['status'=>true,'message'=>'User created successfully','data'=>$user]);
     }
 
-    public function login(Request $request){
+
+    /**
+     * Log a user in.
+     *
+     * @param Request $request taking 'email' & 'password'
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function login(Request $request)
+    {
         $credentials = $request->only('email', 'password');
         $token = null;
         try {
@@ -45,21 +72,81 @@ class UserController extends Controller
         return response()->json(compact('token'));
     }
 
-    public function getAuthUser(Request $request){
+    /**
+     * Gets the authenticated user.
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAuthUser(Request $request)
+    {
         $user = \Auth::user();
         return response()->json(['result' => $user]);
     }
 
-    public function logout(){
+    /**
+     * Log a user out.
+     *
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function logout()
+    {
         JWTAuth::invalidate(JWTAuth::getToken());
         return redirect('/');
     }
 
-    public function updatePassword(){
+    /**
+     * Updating a user's password.
+     *
+     * @request ('password')
+     *
+     * @return string
+     */
+    public function updatePassword()
+    {
         $user = User::find(auth()->id());
         $user->password = bcrypt(request('password'));
         $user->save();
         return ("password is Updated");
+    }
 
+    /**
+     * Searching for a user by name.
+     *
+     * @request ('name')
+     *
+     * @return \Illuminate\Http\JsonResponse array of users with the requested name
+     */
+    public function searchUser()
+    {
+        $name = request('name');
+        $users = User::where('name', $name)->orWhere('name', 'like', '%' . request('name') . '%')->get();
+        return response()->json($users);
+    }
+
+    /**
+     * Invite a user to follow a private task.
+     *
+     * @request ('task_id)
+     * @request ('user_id')
+     *
+     * @return \Illuminate\Http\JsonResponse if user is not an owner of the task
+     * @return send mail to the invited user if an owner invites him for a task
+     */
+    public function invite()
+    {
+        $this->validate(request(), [
+            'task_id' => 'required',
+            'user_id' => 'required'
+        ]);
+        $task = Task::find(request('task_id'));
+        $user = User::find(request('user_id'));
+        if (\Gate::denies('taskOwner', $task)) {
+            return response()->json("you are not an owner of this task");
+
+
+        }
+        \Mail::to($user)->send(new TaskInvitation($user, $task));
     }
 }
