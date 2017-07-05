@@ -16,7 +16,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-        Task::class => TaskPolicy::classa
+        Task::class => TaskPolicy::class
     ];
 
     /**
@@ -28,6 +28,6 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+
     }
 }
