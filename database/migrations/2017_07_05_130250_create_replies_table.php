@@ -22,6 +22,7 @@ class CreateRepliesTable extends Migration
             $table->integer('reply_id');
             $table->string('body');
             $table->string('votes');
+            $table->integer('user_id');
             $table->timestamps();
         });
     }

@@ -20,7 +20,6 @@ class Comment extends Model
     {
         return $this->morphTo();
     }
-
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -37,11 +36,17 @@ class Comment extends Model
         return $this->morphMany('App\Comment', 'commentable');
     }
 
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function user (){
         return $this->belongsTo(User::class);
+    }
+
+    public function hasVotes()
+    {
+        return $this->morphMany('App\Vote', 'voteable');
     }
 
 }

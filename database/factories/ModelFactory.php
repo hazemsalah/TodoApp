@@ -50,6 +50,28 @@ $factory->define(\App\Comment::class, function ($faker) {
     ];
 });
 
+$factory->define(\App\Vote::class, function($faker){
+   return[
+       'voteable_id' => function(){
+             return factory(App\Comment::class)->create()->id;
+       },
+       'user_id' => function () {
+           return factory(App\User::class)->create()->id;
+       },
+        'voteable_type' => (new ReflectionClass(\App\Comment::class))->getName()
+   ];
+});
+
+$factory->state(App\Vote::class, 'voteReply', function ($faker) {
+    return [
+        'voteable_id' => function(){
+            return factory(App\Reply::class)->create()->id;
+        },
+        'voteable_type' => (new ReflectionClass(\App\Reply::class))->getName(),
+    ];
+});
+
+
 $factory->state(App\Comment::class, 'ReplyId', function ($faker) {
     return [
         'commentable_id' => function(){
