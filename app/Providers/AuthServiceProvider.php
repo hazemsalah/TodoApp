@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Comment;
+use App\Policies\CommentPolicy;
 use App\Policies\TaskPolicy;
 use App\Task;
 use Illuminate\Support\Facades\Gate;
@@ -16,7 +18,8 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-        Task::class => TaskPolicy::class
+        Task::class => TaskPolicy::class,
+        Comment::class => CommentPolicy::class
     ];
 
     /**

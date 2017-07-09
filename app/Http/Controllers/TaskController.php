@@ -40,7 +40,7 @@ class TaskController extends Controller
             'deadline'=>request('deadline')
         ]);
         $task = $task->fresh();
-        \Notification::send($task->user, new reminder($task));
+        //\Notification::send($task->user, new reminder($task));
         return response()->json(['result' => $task]);
     }
     /**
@@ -99,6 +99,7 @@ class TaskController extends Controller
         $task=Task::find(request('task_id'));
         if(\Gate::denies('taskOwner', $task)){
             return response()->json("Task doesn't Belong To you");
+
         }
         $task->body=request('body');
         $task->save();
