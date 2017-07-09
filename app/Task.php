@@ -13,7 +13,7 @@ class Task extends Model
     /**
      * @var array
      */
-    protected $fillable = array( 'body','user_id','private','completed','deadline');
+    protected $fillable = ['body','user_id','private','completed','deadline'];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -37,11 +37,15 @@ class Task extends Model
           return $this->hasMany(File::class);
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function comments (){
-        return $this->hasMany(Comment::class);
+//    /**
+//     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+//     */
+//    public function comments (){
+//        return $this->hasMany(Comment::class);
+//    }
+    public function comments()
+    {
+        return $this->morphMany('App\Comment', 'commentable');
     }
 
 }

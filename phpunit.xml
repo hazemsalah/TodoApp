@@ -29,7 +29,12 @@
         <env name="QUEUE_DRIVER" value="sync"/>
         <env name="DB_HOST" value="localhost"/>
         <env name="DB_USERNAME" value="root"/>
-        <env name="DB_PASSWORD" value=""/>
+<<<<<<< HEAD
+        <env name="DB_PASSWORD" value="Mysql12.!"/>
         <env name="DB_DATABASE" value="testing_todo"/>
+=======
+        <env name="DB_PASSWORD" value=""/>
+        <env name="DB_DATABASE" value="test"/>
+>>>>>>> fe3a5f2a7ba80e8662890de429b54f3271552831
     </php>
 </phpunit>

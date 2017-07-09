@@ -41,8 +41,14 @@ Route::get('getCompleted','TaskController@getCompleted')->middleware('auth:api')
 Route::get('getNotCompleted','TaskController@getNotCompleted')->middleware('auth:api');
 //Route::post('getTasksByOwner','TaskController@getTasksByOwner')->middleware('auth:api');
 Route::post('followTask','UserFollowingTasksController@followTask');
-
 Route::post('invite','UserController@invite')->middleware('auth:api');
+Route::post('addComment','CommentController@create')->middleware('auth:api');
+Route::post('editComment','CommentController@update')->middleware('auth:api');
+Route::post('deleteComment','CommentController@destroy')->middleware('auth:api');
+Route::post('getComments','CommentController@show')->middleware('auth:api');
+Route::post('upVote', 'VoteController@upVote');
+Route::post('downVote', 'VoteController@downVote');
+
 
 Route::get('auth/{provider}', 'UserController@redirectToProvider')->middleware('web');
 Route::get('auth/{provider}/callback', 'USerController@handleProviderCallback')->middleware('web');
