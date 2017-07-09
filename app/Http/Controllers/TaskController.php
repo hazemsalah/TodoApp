@@ -40,7 +40,6 @@ class TaskController extends Controller
             'deadline'=>request('deadline')
         ]);
         $task = $task->fresh();
-        \Notification::send($task->user, new reminder($task));
         return response()->json(['result' => $task]);
     }
     /**
@@ -81,6 +80,7 @@ class TaskController extends Controller
         $task->save();
         $usersFollowingTask = UserFollowingTasks::where('task_id',$task->id)->get();
         foreach($usersFollowingTask as $userFollowingTask){
+
             \Notification::send($task->user, new UpdateTask( $userFollowingTask));
         }
         return response()->json(['result' => $task]);

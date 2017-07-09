@@ -35,4 +35,37 @@ $factory->define(\App\Task::class, function ($faker) {
     ];
 });
 
+$factory->define(\App\Comment::class, function ($faker) {
+    return [
+        'body'  =>  $faker->sentence,
+        'user_id' => function () {
+            return factory(App\User::class)->create()->id;
+        },
+        'task_id' => function () {
+            return factory(\App\Task::class)->create()->id;
+        },
+        'votes' => 0
+    ];
+});
+
+$factory->define(\App\Vote::class, function($faker){
+   return[
+       'voteable_id' => function(){
+             return factory(App\Comment::class)->create()->id;
+       },
+       'user_id' => function () {
+           return factory(App\User::class)->create()->id;
+       },
+        'voteable_type' => (new ReflectionClass(\App\Comment::class))->getName()
+   ];
+});
+
+$factory->state(App\Vote::class, 'voteReply', function ($faker) {
+    return [
+        'voteable_id' => function(){
+            return factory(App\Reply::class)->create()->id;
+        },
+        'voteable_type' => (new ReflectionClass(\App\Reply::class))->getName(),
+    ];
+});
 

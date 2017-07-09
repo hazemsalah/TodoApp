@@ -13,7 +13,7 @@ class Task extends Model
     /**
      * @var array
      */
-    protected $fillable = array( 'body','user_id','private','completed','deadline');
+    protected $fillable = ['body','user_id','private','completed','deadline'];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
