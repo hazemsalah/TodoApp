@@ -21,6 +21,7 @@ class CreateCommentsTable extends Migration
             $table ->text('body');
             $table-> integer ('user_id');
             $table->integer('votes')->default(0);
+            $table->integer('task_id');
             $table->timestamps();
         });
     }
