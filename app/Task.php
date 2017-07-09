@@ -37,11 +37,15 @@ class Task extends Model
           return $this->hasMany(File::class);
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function comments (){
-        return $this->hasMany(Comment::class);
+//    /**
+//     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+//     */
+//    public function comments (){
+//        return $this->hasMany(Comment::class);
+//    }
+    public function comments()
+    {
+        return $this->morphMany('App\Comment', 'commentable');
     }
 
 }
