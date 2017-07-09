@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\File;
-
+//use Intervention\Image\Image as Image;
 /**
  * Class FileController
  * @package App\Http\Controllers
@@ -19,16 +19,27 @@ class FileController extends Controller
      */
     public function upload(){
         $this->validate(request(),[
-            'task_id'=>'required',
+            'comment_id'=>'required',
             'file'=>'required'
         ]);
-    $file=request('file');
-    File::create([
-        'task_id'=>request('task_id'),
-        'path'=>'/uploads/'.$file->getClientOriginalName()
+
+        $file=request('file');
+
+
+        if ($file->getMimeType()=="image/jpeg"||$file->getMimeType()=="image/png")
+        {
+            if( getimagesize($file)[0]>=1500 ){
+                $img =  \Image::make($file->getRealPath());
+                $img->resize(800, 800);
+                $img->save($file->getRealPath());
+            }
+        }
+        $path = $file->storeAs('uploads',$file->getClientOriginalName());
+        File::create([
+        'comment_id'=>request('comment_id'),
+        'path'=>$path
     ]);
-    $destinationPath = 'uploads';
-    $file->move($destinationPath,$file->getClientOriginalName());
+
         return response()->json(['Your file has been uploaded']);
 }
 }

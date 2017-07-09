@@ -9,6 +9,8 @@ use JWTAuth;
 use App\User;
 use App\Mail\Welcome;
 use JWTAuthException;
+use Auth;
+use Socialite;
 
 /**
  * Class UserController
@@ -62,6 +64,31 @@ class UserController extends Controller
             return response()->json(['failed_to_create_token'], 500);
         }
         return response()->json(compact('token'));
+    }
+    public function redirectToProvider($provider)
+    {
+        return Socialite::driver($provider)->redirect();
+    }
+    public function handleProviderCallback($provider)
+    {
+        $user = Socialite::driver($provider)->user();
+        $authUser = $this->findOrCreateUser($user, $provider);
+        Auth::login($authUser, true);
+        return redirect('/');
+    }
+    public function findOrCreateUser($user, $provider)
+    {
+        $authUser = User::where('provider_id', $user->id)->first();
+        if ($authUser) {
+            return $authUser;
+        }
+
+        return User::create([
+            'name'     => $user->name,
+            'email'    => $user->email,
+            'provider' => $provider,
+            'provider_id' => $user->id
+        ]);
     }
     /**
      * gets the logged in user

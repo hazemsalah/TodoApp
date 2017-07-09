@@ -44,3 +44,6 @@ Route::post('followTask','UserFollowingTasksController@followTask');
 
 Route::post('invite','UserController@invite')->middleware('auth:api');
 
+Route::get('auth/{provider}', 'UserController@redirectToProvider')->middleware('web');
+Route::get('auth/{provider}/callback', 'USerController@handleProviderCallback')->middleware('web');
+

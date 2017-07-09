@@ -26,13 +26,11 @@ class TaskTest extends TestCase
     /** @test */
     public function aUserCanCreateTask()
     {
-
         // Given: I have an array of task data and a logged in user
         $taskData = factory(Task::class)->make(['user_id' => $this->user->id]);
 
 
         $this->actingAs($this->user);
-
 
         // When: I hit 'api/createTask'
         $response = $this->post('api/addTask', $taskData->toArray());
