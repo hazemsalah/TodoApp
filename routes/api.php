@@ -44,3 +44,11 @@ Route::post('followTask','UserFollowingTasksController@followTask');
 
 Route::post('invite','UserController@invite')->middleware('auth:api');
 
+Route::post('addComment','CommentController@create')->middleware('auth:api');
+Route::post('editComment','CommentController@update')->middleware('auth:api');
+Route::post('deleteComment','CommentController@destroy')->middleware('auth:api');
+Route::post('getComments','CommentController@show')->middleware('auth:api');
+
+
+
+
